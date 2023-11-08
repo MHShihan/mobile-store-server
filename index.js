@@ -30,14 +30,51 @@ async function run() {
 
     const database = client.db("mobileStoreDB");
     const brandCollection = database.collection("brands");
+    const mobileCollection = database.collection("mobiles");
+    const insertedCollection = database.collection("insertedMobile");
 
+    // Get Brands Data
     app.get("/brands", async (req, res) => {
       try {
         const brands = await brandCollection.find().toArray();
-        console.log("brands", brands);
+        // console.log("brands", brands);
         res.send(brands);
       } catch (error) {
         console.log(error);
+      }
+    });
+
+    // Get all Inserted Mobile data
+    app.get("/mobiles", async (req, res) => {
+      try {
+        const mobiles = await insertedCollection.find().toArray();
+        console.log(mobiles);
+        res.send(mobiles);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    // Get the data according to a single brand name
+    app.get("/single-brand-mobile", async (req, res) => {
+      try {
+        const query = req.query;
+        console.log("brandName", query);
+        const mobiles = await insertedCollection.find(query).toArray();
+        res.send(mobiles);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    app.post("/mobiles", async (req, res) => {
+      try {
+        const addedProduct = req.body;
+        console.log(addedProduct);
+        const result = await insertedCollection.insertOne(addedProduct);
+        res.send(result);
+      } catch (err) {
+        console.log(err);
       }
     });
 
