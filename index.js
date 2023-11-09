@@ -10,7 +10,7 @@ app.use(express.json());
 // mukKlvs2R39WfAjU
 // mobileStore
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri =
   "mongodb+srv://mobileStore:mukKlvs2R39WfAjU@cluster0.88ffpvi.mongodb.net/?retryWrites=true&w=majority";
 
@@ -30,8 +30,8 @@ async function run() {
 
     const database = client.db("mobileStoreDB");
     const brandCollection = database.collection("brands");
-    const mobileCollection = database.collection("mobiles");
     const insertedCollection = database.collection("insertedMobile");
+    const addToCartCollection = database.collection("addToCart");
 
     // Get Brands Data
     app.get("/brands", async (req, res) => {
@@ -67,6 +67,33 @@ async function run() {
       }
     });
 
+    // Get single Data
+    app.get("/mobiles/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      if (req.params?.id?.length == 24) {
+        const query = { _id: new ObjectId(id) };
+        console.log(query);
+        const result = await insertedCollection.findOne(query);
+        res.send(result);
+      } else {
+        res.send({
+          err: "input must be a 24 character hex string, 12 byte Uint8Array, or an integer",
+        });
+      }
+    });
+
+    // Get Data from AddToCart Collection
+    app.get("/addToCarts", async (req, res) => {
+      try {
+        result = await addToCartCollection.find().toArray();
+        res.send(result);
+      } catch (err) {
+        console.log(err);
+      }
+    });
+
+    // Post Mobiles
     app.post("/mobiles", async (req, res) => {
       try {
         const addedProduct = req.body;
@@ -76,6 +103,42 @@ async function run() {
       } catch (err) {
         console.log(err);
       }
+    });
+
+    // Post cart data
+    app.post("/addToCarts", async (req, res) => {
+      try {
+        const addToCart = req.body;
+        const result = await addToCartCollection.insertOne(addToCart);
+        res.send(result);
+      } catch (err) {
+        console.log(err);
+      }
+    });
+
+    // Put Updated Data
+    app.put("/mobiles/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedData = req.body;
+      const query = { _id: new ObjectId(id) };
+      const data = {
+        $set: {
+          ...updatedData,
+        },
+      };
+      const result = await insertedCollection.updateOne(query, data);
+      res.send(result);
+    });
+
+    // Delete From cart
+    app.delete("/addToCarts/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      console.log(query);
+      const result = await addToCartCollection.deleteOne(query);
+      console.log(result);
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
