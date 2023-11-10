@@ -28,7 +28,8 @@ async function run() {
     const database = client.db("mobileStoreDB");
     const brandCollection = database.collection("brands");
     const insertedCollection = database.collection("insertedMobile");
-    const addToCartCollection = database.collection("addToCart");
+    // const addToCartCollection = database.collection("addToCart");
+    const myCartCollection = database.collection("myCart");
 
     // Get Brands Data
     app.get("/brands", async (req, res) => {
@@ -81,10 +82,15 @@ async function run() {
     });
 
     // Get Data from AddToCart Collection
-    app.get("/addToCarts", async (req, res) => {
+    app.get("/myCarts", async (req, res) => {
       try {
-        result = await addToCartCollection.find().toArray();
-        res.send(result);
+        const query = { ownerEmail: req.query?.email };
+        if (req.query?.email) {
+          result = await myCartCollection.find(query).toArray();
+          res.send(result);
+        } else {
+          res.send([]);
+        }
       } catch (err) {
         console.log(err);
       }
@@ -102,11 +108,10 @@ async function run() {
       }
     });
 
-    // Post cart data
     app.post("/addToCarts", async (req, res) => {
       try {
         const addToCart = req.body;
-        const result = await addToCartCollection.insertOne(addToCart);
+        const result = await myCartCollection.insertOne(addToCart);
         res.send(result);
       } catch (err) {
         console.log(err);
@@ -128,12 +133,12 @@ async function run() {
     });
 
     // Delete From cart
-    app.delete("/addToCarts/:id", async (req, res) => {
+    app.delete("/cart/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
       const query = { _id: new ObjectId(id) };
       console.log(query);
-      const result = await addToCartCollection.deleteOne(query);
+      const result = await myCartCollection.deleteOne(query);
       console.log(result);
       res.send(result);
     });
